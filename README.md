@@ -18,6 +18,9 @@ Optional query parameter: `?refresh=600` (default: 300 seconds)
 
 Pull requests with new images are welcome! Add PNG files to the `images/` directory.
 
+To generate images in the correct format, follow [TRMNL's docs](https://github.com/usetrmnl/api-docs/blob/master/imagemagick-guide.md).
+Please note as of firmware 1.6.2, there is a 48 KB image size limit.
+
 ## Image Attribution
 
 - `images/legendary-palm-tree/` - From https://github.com/GLdashboard
