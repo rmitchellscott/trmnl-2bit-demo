@@ -1,0 +1,62 @@
+name: Sync GLdashboard Images
+
+on:
+  # Run daily at 2 AM UTC
+  schedule:
+    - cron: '0 * * * *'
+  # Allow manual trigger
+  workflow_dispatch:
+
+jobs:
+  sync-images:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    
+    steps:
+      - name: Checkout our repo
+        uses: actions/checkout@v4
+      
+      - name: Download GLdashboard images
+        run: |
+          # Create temp directory for download
+          mkdir -p /tmp/gl-images
+          cd /tmp/gl-images
+          
+          # Download the repository archive
+          curl -L https://github.com/GLdashboard/legendary-palm-tree/archive/main.zip -o main.zip
+          unzip main.zip
+          
+          # Find all PNG files
+          find legendary-palm-tree-main -name "*.png" -type f > /tmp/new-images.txt
+      
+      - name: Copy new images
+        run: |
+          # Ensure target directory exists
+          mkdir -p images/legendary-palm-tree
+          
+          # Track if we found new images
+          NEW_IMAGES=false
+          
+          # Copy each PNG file if it doesn't exist
+          while IFS= read -r img; do
+            filename=$(basename "$img")
+            if [ ! -f "images/legendary-palm-tree/$filename" ]; then
+              cp "/tmp/gl-images/$img" "images/legendary-palm-tree/$filename"
+              echo "Added new image: $filename"
+              NEW_IMAGES=true
+            fi
+          done < /tmp/new-images.txt
+          
+          # Set output for next step
+          echo "new_images=$NEW_IMAGES" >> $GITHUB_OUTPUT
+        id: copy-images
+      
+      - name: Commit new images
+        if: steps.copy-images.outputs.new_images == 'true'
+        run: |
+          git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add images/legendary-palm-tree/
+          git commit -m "🖼️ Add new images from GLdashboard/legendary-palm-tree"
+          git push
