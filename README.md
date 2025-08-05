@@ -20,4 +20,4 @@ Pull requests with new images are welcome! Add PNG files to the `images/` direct
 
 ## Image Attribution
 
-- `images/legendary-palm-tree-main/` - From https://github.com/GLdashboard
+- `images/legendary-palm-tree/` - From https://github.com/GLdashboard
