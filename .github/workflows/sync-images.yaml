@@ -31,30 +31,44 @@ jobs:
           # Find all PNG files
           find legendary-palm-tree-main -name "*.png" -type f > /tmp/new-images.txt
       
-      - name: Copy new images
+      - name: Copy new and changed images
         run: |
           # Ensure target directory exists
           mkdir -p images/legendary-palm-tree
           
-          # Track if we found new images
-          NEW_IMAGES=false
-          NEW_IMAGE_LIST=""
+          # Track if we found new or changed images
+          CHANGED_IMAGES=false
+          CHANGED_IMAGE_LIST=""
           
-          # Copy each PNG file if it doesn't exist
+          # Copy each PNG file if it's new or changed
           while IFS= read -r img; do
             filename=$(basename "$img")
-            if [ ! -f "images/legendary-palm-tree/$filename" ]; then
-              cp "/tmp/gl-images/$img" "images/legendary-palm-tree/$filename"
+            target_path="images/legendary-palm-tree/$filename"
+            
+            if [ ! -f "$target_path" ]; then
+              # New image
+              cp "/tmp/gl-images/$img" "$target_path"
               echo "Added new image: $filename"
-              NEW_IMAGES=true
-              NEW_IMAGE_LIST="${NEW_IMAGE_LIST}- ${filename}\n"
+              CHANGED_IMAGES=true
+              CHANGED_IMAGE_LIST="${CHANGED_IMAGE_LIST}- ${filename} (new)\n"
+            else
+              # Check if image has changed by comparing checksums
+              source_hash=$(sha256sum "/tmp/gl-images/$img" | cut -d' ' -f1)
+              existing_hash=$(sha256sum "$target_path" | cut -d' ' -f1)
+              
+              if [ "$source_hash" != "$existing_hash" ]; then
+                cp "/tmp/gl-images/$img" "$target_path"
+                echo "Updated changed image: $filename"
+                CHANGED_IMAGES=true
+                CHANGED_IMAGE_LIST="${CHANGED_IMAGE_LIST}- ${filename} (updated)\n"
+              fi
             fi
           done < /tmp/new-images.txt
           
           # Set outputs for next steps
-          echo "new_images=$NEW_IMAGES" >> $GITHUB_OUTPUT
+          echo "new_images=$CHANGED_IMAGES" >> $GITHUB_OUTPUT
           echo "image_list<<EOF" >> $GITHUB_OUTPUT
-          echo -e "$NEW_IMAGE_LIST" >> $GITHUB_OUTPUT
+          echo -e "$CHANGED_IMAGE_LIST" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
         id: copy-images
       
@@ -63,14 +77,14 @@ jobs:
         uses: peter-evans/create-pull-request@v6
         with:
           token: ${{ secrets.PAT }}
-          commit-message: "🖼️ Add new images from GLdashboard/legendary-palm-tree"
+          commit-message: "🖼️ Sync images from GLdashboard/legendary-palm-tree"
           branch: sync-images-${{ github.run_number }}
           delete-branch: true
-          title: "🖼️ New images from GLdashboard/legendary-palm-tree"
+          title: "🖼️ Image updates from GLdashboard/legendary-palm-tree"
           body: |
-            ## New images detected
+            ## Image changes detected
             
-            This PR adds the following new images from GLdashboard/legendary-palm-tree:
+            This PR includes the following image changes from GLdashboard/legendary-palm-tree:
             
             ${{ steps.copy-images.outputs.image_list }}
             
