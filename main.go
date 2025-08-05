@@ -67,9 +67,13 @@ func getRandomImage(c *gin.Context) {
 	randomIndex := rand.Intn(len(imagePaths))
 	imagePath := imagePaths[randomIndex]
 
-	scheme := "https"
-	if c.Request.TLS == nil {
-		scheme = "http"
+	scheme := "http"
+	if c.Request.TLS != nil {
+		scheme = "https"
+	} else if c.GetHeader("X-Forwarded-Proto") == "https" {
+		scheme = "https"
+	} else if c.Request.URL.Scheme != "" {
+		scheme = c.Request.URL.Scheme
 	}
 
 	url := fmt.Sprintf("%s://%s/%s", scheme, c.Request.Host, imagePath)

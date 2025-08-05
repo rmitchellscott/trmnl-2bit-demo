@@ -1,7 +1,7 @@
 name: build-docker
 
 env:
-  YAMLPATH: clusters/us-rockies-1/apps/trmnl/2bit/helmrelease.yaml
+  YAMLPATH: clusters/us-rockies-1/apps/trmnl/app/helmrelease.yaml
 
 on:
   push:
