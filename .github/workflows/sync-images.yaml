@@ -78,7 +78,7 @@ jobs:
         with:
           token: ${{ secrets.PAT }}
           commit-message: "🖼️ Sync images from GLdashboard/legendary-palm-tree"
-          branch: sync-images-${{ github.run_number }}
+          branch: sync-images-automated
           delete-branch: true
           title: "🖼️ Image updates from GLdashboard/legendary-palm-tree"
           body: |
